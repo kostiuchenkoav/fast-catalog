@@ -45,7 +45,25 @@ export function generateProducts(count: number, seed = 42): Product[] {
       price: Math.round((random() * 19000 + 290) / 10) * 10,
       rating: Math.round((random() * 4 + 1) * 10) / 10,
       description: `${noun} из категории «${category}». Модель ${adjective.toLowerCase()}, с гарантией производителя.`,
-      image: `https://picsum.photos/seed/${id}/320/240`,
+      image: placeholderImage(id),
     };
   });
+}
+
+/**
+ * Встроенная SVG-заглушка: не зависит от внешних сервисов, поэтому картинки
+ * одинаково видны в демо, в офлайне и в скриншотах README.
+ */
+export function placeholderImage(id: number): string {
+  const hue = (id * 47) % 360;
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240">` +
+    `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">` +
+    `<stop offset="0" stop-color="hsl(${hue},70%,78%)"/><stop offset="1" stop-color="hsl(${(hue + 40) % 360},65%,62%)"/>` +
+    `</linearGradient></defs>` +
+    `<rect width="320" height="240" fill="url(#g)"/>` +
+    `<circle cx="160" cy="112" r="46" fill="#fff" fill-opacity="0.55"/>` +
+    `<text x="160" y="218" font-family="Arial,sans-serif" font-size="20" text-anchor="middle" fill="#1f2937">№${id}</text>` +
+    `</svg>`;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
