@@ -17,6 +17,27 @@ const NOUNS: Record<string, string[]> = {
   'Игрушки': ['Конструктор', 'Пазл', 'Настольная игра', 'Мягкая игрушка', 'Машинка', 'Кубики'],
 };
 
+/** Вымышленные названия книг: не существующие произведения, чтобы каталог не путали с реальными изданиями. */
+const FICTIONAL_BOOK_TITLES = [
+  'Тени над Заречьем', 'Ночь без звёзд', 'Письма из Соснового', 'Хранитель маяка', 'Сад для одного',
+  'Зимний перевал', 'Полночный почтальон', 'Ключ от старой башни', 'Река без имени', 'Город в тумане',
+  'Последний вагон', 'Огни Лисьего залива', 'Дорога к озеру Тихому', 'Часы на площади Шанс', 'Тихий берег',
+  'Двенадцать шагов по снегу', 'Дом с синими ставнями', 'Ветер над Кедровой', 'Записки смотрителя', 'Каменный мост',
+  'Осенний караван', 'Забытый сад', 'Соль и медь', 'Жёлтый трамвай', 'Ночной переезд',
+  'Карта без адреса', 'Пароход «Надежда»', 'Мельница на краю', 'Голоса в колодце', 'Лестница в облаках',
+];
+
+/** Общая заглушка для всех товаров: один SVG вместо отдельной картинки на каждую карточку. */
+const PLACEHOLDER_SVG =
+  `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240">` +
+  `<rect width="320" height="240" fill="#e5e7eb"/>` +
+  `<rect x="120" y="70" width="80" height="100" rx="6" fill="#cbd5e1"/>` +
+  `<path d="M160 82 V158" stroke="#94a3b8" stroke-width="3"/>` +
+  `<text x="160" y="200" font-family="Arial,sans-serif" font-size="16" text-anchor="middle" fill="#64748b">Нет изображения</text>` +
+  `</svg>`;
+
+export const PLACEHOLDER_IMAGE = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(PLACEHOLDER_SVG)}`;
+
 const ADJECTIVES = ['Компактный', 'Классический', 'Лёгкий', 'Премиум', 'Бюджетный', 'Универсальный', 'Яркий', 'Минималистичный'];
 
 /** Линейный конгруэнтный генератор: простой, быстрый и воспроизводимый. */
@@ -30,6 +51,7 @@ function createRandom(seed: number) {
 
 export function generateProducts(count: number, seed = 42): Product[] {
   const random = createRandom(seed);
+  let bookIndex = 0;
   const pick = <T,>(items: readonly T[]): T => items[Math.floor(random() * items.length)];
 
   return Array.from({ length: count }, (_, index) => {
@@ -40,30 +62,19 @@ export function generateProducts(count: number, seed = 42): Product[] {
 
     return {
       id,
-      name: `${adjective} ${noun.toLowerCase()} №${id}`,
+      name: category === 'Книги' ? bookTitle(bookIndex++) : `${adjective} ${noun.toLowerCase()} №${id}`,
       category,
       price: Math.round((random() * 19000 + 290) / 10) * 10,
       rating: Math.round((random() * 4 + 1) * 10) / 10,
       description: `${noun} из категории «${category}». Модель ${adjective.toLowerCase()}, с гарантией производителя.`,
-      image: placeholderImage(id),
+      image: PLACEHOLDER_IMAGE,
     };
   });
 }
 
-/**
- * Встроенная SVG-заглушка: не зависит от внешних сервисов, поэтому картинки
- * одинаково видны в демо, в офлайне и в скриншотах README.
- */
-export function placeholderImage(id: number): string {
-  const hue = (id * 47) % 360;
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240">` +
-    `<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">` +
-    `<stop offset="0" stop-color="hsl(${hue},70%,78%)"/><stop offset="1" stop-color="hsl(${(hue + 40) % 360},65%,62%)"/>` +
-    `</linearGradient></defs>` +
-    `<rect width="320" height="240" fill="url(#g)"/>` +
-    `<circle cx="160" cy="112" r="46" fill="#fff" fill-opacity="0.55"/>` +
-    `<text x="160" y="218" font-family="Arial,sans-serif" font-size="20" text-anchor="middle" fill="#1f2937">№${id}</text>` +
-    `</svg>`;
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+/** Название книги: первые тексты без номера, повторы получают номер тома. */
+function bookTitle(index: number): string {
+  const title = FICTIONAL_BOOK_TITLES[index % FICTIONAL_BOOK_TITLES.length];
+  const volume = Math.floor(index / FICTIONAL_BOOK_TITLES.length) + 1;
+  return volume === 1 ? title : `${title}. Том ${volume}`;
 }
